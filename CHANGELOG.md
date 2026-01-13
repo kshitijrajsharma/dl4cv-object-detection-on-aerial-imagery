@@ -1,3 +1,9 @@
+## v0.1.5 (2026-01-13)
+
+### Fix
+
+- **split**: fixes train split spatial
+
 ## v0.1.4 (2026-01-13)
 
 ### Fix

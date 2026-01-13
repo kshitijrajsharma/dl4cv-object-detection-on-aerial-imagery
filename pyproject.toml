@@ -1,6 +1,6 @@
 [project]
 name = "dl4cv-oda"
-version = "0.1.4"
+version = "0.1.5"
 description = "Coconut tree detection from drone imagery"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -59,7 +59,7 @@ ignore = ["E501"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.4"
+version = "0.1.5"
 tag_format = "v$version"
 version_scheme = "semver"
 version_files = [
