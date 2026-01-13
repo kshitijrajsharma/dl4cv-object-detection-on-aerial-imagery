@@ -33,6 +33,9 @@ Coconut tree detection from drone imagery using YOLOv8, YOLOv12, and RT-DETR mod
 | Val   | 89    | 2,008  |
 | Test  | 46    | 948    |
 
+<img width="801" height="642" alt="image" src="https://github.com/user-attachments/assets/cb51547a-64a9-4f4d-a860-96b38b97725b" />
+
+
 **Splitting Strategy**: Spatial splitting based on tiles along the Y-axis to prevent data leakage and ensure geographic separation between train/val/test sets.
 
 **Image Specifications**:
@@ -145,6 +148,10 @@ Optuna was used to optimize:
 | YOLOv8l | CNN-based | 209 | 43.6M | 165.4 | 87.6 |
 | YOLOv12l | CNN + Attention | 488 | 26.4M | 89.4 | 53.5 |
 | RT-DETR-l | Transformer | 465 | 32.8M | 108.0 | 66.2 |
+
+RT-DETR-l Architecture : 
+<img width="1073" height="374" alt="image" src="https://github.com/user-attachments/assets/595f699e-3039-45b5-9b00-7a34e1ec8618" />
+
 
 **Model Selection**: Large (L) variants were selected for all models to enable fair comparison, as RT-DETR is only available in large and extra-large configurations.
 
