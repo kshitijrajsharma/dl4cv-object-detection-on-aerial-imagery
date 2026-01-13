@@ -97,8 +97,8 @@ def create_train_val_split(
 
     df = pd.DataFrame(data)
 
-    # Spatial split: sort by x coordinate and divide into spatial regions
-    df = df.sort_values("x").reset_index(drop=True)
+    # Spatial split: sort by y coordinate and divide into spatial regions
+    df = df.sort_values("y").reset_index(drop=True)
     n = len(df)
 
     train_end = int(n * train_ratio)

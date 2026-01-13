@@ -17,8 +17,14 @@ Coconut tree detection from drone imagery using YOLOv8, Yolov12, and RT_DERT mod
 **Statistics**:
 - **Original**: 10,631 trees (Coconut: 10,092 | Mango: 261 | Banana: 181 | Papaya: 97)
 - **Target**: Coconut trees only
+Clipped labels to tiles: {'total_trees': 10092, 'total_tiles': 551, 'processed_input_tiles': 448, 'skipped_nonlabeled_tiles': 103, 'total_input_trees': 11726}
+Converted to YOLO format
+Split:  train=313, val=89, test=46
+
+70 / 20 / 10 for train/val/test
+
 - **Tiles**: 256×256px at zoom 19, EPSG:4326
-- **Train/Val**: 441 / 167 tiles (80/20 stratified split), but we did later 70,20,10 for train, val, test for hyperparameter tuning and improve model accuracy.
+
 
 ## Structure
 
@@ -40,8 +46,8 @@ notebooks/
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/kshitijrajsharma/dl4cv-object-detection-on-aerial-imagery
-cd dl4cv-object-detection-on-aerial-imagery
+git clone https://github.com/kshitijrajsharma/dl4cv-oda
+cd dl4cv-oda
 uv sync
 ```
 
