@@ -62,13 +62,20 @@ data/
 ├── raw/                # OAM imagery + OSM points
 ├── chips/              # 256×256 tiles (.tif)
 ├── labels/             # Per-tile annotations (.geojson)
+├── tiles.geojson       # Tile grid metadata
+├── trees_box.geojson   # Buffered bounding boxes
 └── yolo/
     ├── train/          # Training data (.png + .txt)
-    ├── val/            # Validation data
+    ├── val/            # Validation data (.png + .txt)
+    ├── test/           # Test data (.png + .txt)
     └── config.yaml     # YOLO config
 
 notebooks/
-├── pipeline.ipynb      # Full pipeline with dl4cv-oda package
+├── pipeline.ipynb                  # Full pipeline with dl4cv-oda package
+├── results/                        # Experiment results
+│   └── full_pipeline_20260113_225000/  # Latest experiment
+src/
+└── dl4cv_oda/          # Package source code
 ```
 
 ## Setup
@@ -83,7 +90,7 @@ uv sync
 ## Development (version bump)
 
 ```bash
-uv sync --extra dev
+uv sync --all-extras
 cz bump
 git push --tags
 ```
@@ -104,9 +111,11 @@ x_norm = col / img_width
 y_norm = row / img_height
 ```
 
-**4. Hyperparameter Optimization**: Optuna-based tuning
+**4. Spatial Split**: Split tiles into train/val/test (70/20/10) along Y-axis to ensure geographic separation and prevent data leakage
 
-**5. Train**: Models with optimized hyperparameters
+**5. Hyperparameter Optimization**: Optuna-based tuning (learning rate, weight decay, batch size)
+
+**6. Train**: Models with both default and optimized hyperparameters
 
 ## Training Configuration
 
@@ -143,34 +152,84 @@ Optuna was used to optimize:
 
 ### Architecture Overview
 
-| Model | Type | Layers | Parameters | GFLOPs | Size (MB) |
-|-------|------|--------|------------|--------|-----------|
-| YOLOv8l | CNN-based | 209 | 43.6M | 165.4 | 87.6 |
-| YOLOv12l | CNN + Attention | 488 | 26.4M | 89.4 | 53.5 |
-| RT-DETR-l | Transformer | 465 | 32.8M | 108.0 | 66.2 |
+| Model | Type | Layers | Parameters | Size (MB) |
+|-------|------|--------|------------|-----------|
+| YOLOv8l | CNN-based | 209 | 43.7M | 83.5 |
+| YOLOv12l | CNN + Attention | 488 | 26.5M | 51.0 |
+| RT-DETR-l | Transformer | 465 | 33.0M | 63.1 |
 
-RT-DETR-l Architecture : 
+RT-DETR-l Architecture:
+
 <img width="1073" height="374" alt="image" src="https://github.com/user-attachments/assets/595f699e-3039-45b5-9b00-7a34e1ec8618" />
-
 
 **Model Selection**: Large (L) variants were selected for all models to enable fair comparison, as RT-DETR is only available in large and extra-large configurations.
 
 ### Performance Results
 
-| Model | Val F1 | Test F1 | Test mAP50 | Epochs | Training Time |
-|-------|--------|---------|------------|--------|---------------|
-| **RT-DETR-l** | 0.7478 | **0.7876** | 0.7369 | 95* | 6.96 min |
-| **YOLOv12l** | 0.7348 | 0.7668 | 0.7085 | 113* | 3.84 min |
-| **YOLOv8l** | 0.7164 | 0.7630 | **0.7283** | 48* | 1.38 min |
+#### Base Models (Default Hyperparameters)
 
-*Stopped at epoch N due to early stopping (patience=30)
+| Model | Val F1 | Test F1 | Test mAP50 | Test Precision | Test Recall | Epochs | Training Time |
+|-------|--------|---------|------------|----------------|-------------|--------|---------------|
+| **RT-DETR-l** | **0.7478** | **0.7876** | **0.7369** | 0.7760 | **0.7996** | 95* | 7.10 min |
+| **YOLOv12l** | 0.7348 | 0.7668 | 0.7085 | 0.7708 | 0.7628 | 113* | 3.99 min |
+| **YOLOv8l** | 0.7164 | 0.7630 | 0.7283 | **0.7791** | 0.7476 | 48* | **1.50 min** |
+
+*All models stopped early due to patience=30 (no improvement for 30 consecutive epochs)
+
+**Training Configuration**: Max epochs=200, Early stopping patience=30, Batch size=16, Image size=256×256
+
+#### Optuna-Tuned Models
+
+| Model | Val F1 | Test F1 | Test mAP50 | Test Precision | Test Recall |
+|-------|--------|---------|------------|----------------|-------------|
+| **RT-DETR-l** | **0.7468** | **0.7747** | **0.7355** | 0.7729 | **0.7764** |
+| **YOLOv12l** | 0.7193 | 0.7614 | 0.7006 | 0.7677 | 0.7553 |
+| **YOLOv8l** | 0.6888 | 0.7417 | 0.6801 | **0.7800** | 0.7069 |
+
+
+### Inference Performance
+
+| Model | Val Inference | Test Inference |
+|-------|---------------|----------------|
+| YOLOv8l | 2.84 sec | **2.17 sec** |
+| YOLOv12l | 3.08 sec | 2.39 sec |
+| RT-DETR-l | 3.69 sec | 2.64 sec |
 
 ### Key Findings
 
-- **RT-DETR-l** achieved the highest test F1 score (0.7876) with transformer-based architecture
-- **YOLOv12l** offers the best model efficiency (53.5 MB) with attention-aware mechanisms
-- **YOLOv8l** provides fastest training time (0.023 hrs) with traditional CNN approach
-- All models demonstrate strong generalization (F1 > 0.76 on test set)
+#### Model Performance Summary
+
+**Best Overall Performance**: RT-DETR-l (Base)
+- Highest Test F1: **0.7876** (best balance of precision and recall)
+- Highest Test mAP50: **0.7369** (best detection accuracy)
+- Best Recall: **0.7996** (superior at finding coconut trees, minimal false negatives)
+- Trade-off: Slowest training (7.10 min) and inference times
+
+**Best Efficiency**: YOLOv12l
+- Smallest model size: **51.0 MB** (40% smaller than YOLOv8l)
+- Competitive performance: Test F1 of 0.7668 (base) and 0.7614 (optuna)
+- Moderate training time: 3.99 min (base), 2.39 min (optuna)
+- Best choice for resource-constrained deployments
+
+**Fastest Training & Inference**: YOLOv8l
+- Training time: **1.50 min** (5× faster than RT-DETR-l)
+- Fastest inference: 2.17 sec on test set
+- Solid performance: Test F1 of 0.7630 (base)
+- Best for rapid prototyping and real-time applications
+
+### Experiment Results
+
+Detailed results including training curves, validation predictions, and hyperparameters are available [here](notebooks/results/full_pipeline_20260113_225000/):
+```
+notebooks/results/full_pipeline_20260113_225000/
+```
+
+Each model folder contains:
+- `results.csv`: Per-epoch metrics
+- `results.png`: Training curves
+- `val_batch1_labels.jpg` & `val_batch1_pred.jpg`: Validation predictions
+- `args.yaml`: Training configuration
+- Best hyperparameters from Optuna tuning
 
 ## Training Example
 
