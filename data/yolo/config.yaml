@@ -1,0 +1,6 @@
+path: /home/krschap/academia/dl4cv-object-detection-on-aerial-imagery/data/yolo
+train: train
+val: val
+test: test
+names:
+  0: Coconut
