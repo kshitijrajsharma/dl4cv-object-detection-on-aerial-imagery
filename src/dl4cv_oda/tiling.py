@@ -35,7 +35,13 @@ def clip_labels_to_tiles(trees_path, tiles_path, output_dir, prefix="OAM"):
 
     os.makedirs(output_dir, exist_ok=True)
 
-    stats = {"processed": 0, "skipped": 0, "total_trees": 0}
+    stats = {
+        "total_trees": len(trees),
+        "total_tiles": len(tiles),
+        "processed_input_tiles": 0,
+        "skipped_nonlabeled_tiles": 0,
+        "total_input_trees": 0,
+    }
 
     for _, tile in tiles.iterrows():
         x, y, z = parse_tile_id(tile["id"])
@@ -43,13 +49,13 @@ def clip_labels_to_tiles(trees_path, tiles_path, output_dir, prefix="OAM"):
 
         intersecting = trees[trees.intersects(tile.geometry)].copy()
         if intersecting.empty:
-            stats["skipped"] += 1
+            stats["skipped_nonlabeled_tiles"] += 1
             continue
 
         clipped = gpd.clip(intersecting, tile.geometry)
         clipped.to_file(Path(output_dir) / filename, driver="GeoJSON")
 
-        stats["processed"] += 1
-        stats["total_trees"] += len(clipped)
+        stats["processed_input_tiles"] += 1
+        stats["total_input_trees"] += len(clipped)
 
     return stats

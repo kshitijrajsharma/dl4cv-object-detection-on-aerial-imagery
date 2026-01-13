@@ -11,7 +11,7 @@ def parse_tags(tags_str):
     return result
 
 
-def clean_osm_data(input_path, output_point_path, output_box_path):
+def clean_osm_data(input_path, output_point_path, output_box_path, target=None):
     data = gpd.read_file(input_path)
     data = data.dropna(subset=["other_tags"])
 
@@ -35,6 +35,10 @@ def clean_osm_data(input_path, output_point_path, output_box_path):
 
     data["species_mapped"] = data["species"].map(mapping)
     data = data.dropna(subset=["species_mapped"])
+
+    if target:
+        data = data[data["species_mapped"] == target]
+
     data = data[["osm_id", "natural", "species", "species_mapped", "geometry"]]
 
     data.to_crs(epsg=3857, inplace=True)

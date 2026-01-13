@@ -33,11 +33,8 @@ def geojson_to_yolo(geojson_path, image_path, class_mapping):
     return yolo_lines
 
 
-def convert_to_yolo_format(
-    trees_path, chips_dir, labels_dir, output_dir, target_species="Coconut"
-):
+def convert_to_yolo_format(trees_path, chips_dir, labels_dir, output_dir):
     trees = gpd.read_file(trees_path)
-    trees = trees[trees["species_mapped"] == target_species]
 
     chips_dir = Path(chips_dir)
     labels_dir = Path(labels_dir)
@@ -69,7 +66,13 @@ def convert_to_yolo_format(
 
 
 def create_train_val_split(
-    labels_dir, chips_dir, yolo_dir, train_ratio=0.7, val_ratio=0.2, test_ratio=0.1, seed=42
+    labels_dir,
+    chips_dir,
+    yolo_dir,
+    train_ratio=0.7,
+    val_ratio=0.2,
+    test_ratio=0.1,
+    seed=42,
 ):
     labels_dir = Path(labels_dir)
     chips_dir = Path(chips_dir)
@@ -83,36 +86,47 @@ def create_train_val_split(
     val_dir.mkdir(exist_ok=True)
     test_dir.mkdir(exist_ok=True)
 
+    # Parse tile coordinates from filenames (OAM-x-y-z format)
     data = []
     for label_file in sorted(labels_dir.glob("*.geojson")):
-        trees = gpd.read_file(label_file)
-        if not trees.empty:
-            dominant_species = trees["species_mapped"].value_counts().idxmax()
-            data.append({"file": label_file.stem, "species": dominant_species})
+        stem = label_file.stem
+        parts = stem.split("-")
+        if len(parts) >= 4:  # OAM-x-y-z format
+            x, y, z = int(parts[1]), int(parts[2]), int(parts[3])
+            data.append({"file": stem, "x": x, "y": y, "z": z})
 
     df = pd.DataFrame(data)
-    train_df = df.groupby("species", group_keys=False).apply(
-        lambda x: x.sample(frac=train_ratio, random_state=seed), include_groups=False
-    )
-    remaining_df = df.drop(train_df.index)
 
-    val_frac = val_ratio / (val_ratio + test_ratio)
-    val_df = remaining_df.groupby("species", group_keys=False).apply(
-        lambda x: x.sample(frac=val_frac, random_state=seed), include_groups=False
-    )
-    test_df = remaining_df.drop(val_df.index)
+    # Spatial split: sort by x coordinate and divide into spatial regions
+    df = df.sort_values("x").reset_index(drop=True)
+    n = len(df)
 
-    for split_df, target_dir in [
-        (train_df, train_dir),
-        (val_df, val_dir),
-        (test_df, test_dir),
+    train_end = int(n * train_ratio)
+    val_end = train_end + int(n * val_ratio)
+
+    train_df = df.iloc[:train_end]
+    val_df = df.iloc[train_end:val_end]
+    test_df = df.iloc[val_end:]
+
+    for split_df, target_dir, split_name in [
+        (train_df, train_dir, "train"),
+        (val_df, val_dir, "val"),
+        (test_df, test_dir, "test"),
     ]:
+        geometries = []
         for stem in split_df["file"]:
             with rasterio.open(chips_dir / f"{stem}.tif") as src:
                 Image.fromarray(src.read([1, 2, 3]).transpose(1, 2, 0)).save(
                     target_dir / f"{stem}.png"
                 )
             shutil.copy(yolo_labels_dir / f"{stem}.txt", target_dir / f"{stem}.txt")
+            if (label := labels_dir / f"{stem}.geojson").exists():
+                geometries.append(gpd.read_file(label))
+
+        if geometries:
+            pd.concat(geometries, ignore_index=True).to_file(
+                yolo_dir / f"{split_name}.geojson", driver="GeoJSON"
+            )
 
     return len(train_df), len(val_df), len(test_df)
 
