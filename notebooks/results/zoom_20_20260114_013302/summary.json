@@ -1,0 +1,90 @@
+{
+  "exp_id": "20260114_013302",
+  "seed": 64,
+  "epochs": 200,
+  "img_size": 256,
+  "data": {
+    "total_trees": 10092,
+    "total_tiles": 2109,
+    "processed_input_tiles": 1483,
+    "skipped_nonlabeled_tiles": 626,
+    "total_input_trees": 13615
+  },
+  "batch": 16,
+  "patience": 30,
+  "tune_default": false,
+  "tune_optuna": false,
+  "tune_iterations": 6,
+  "tune_epochs": 60,
+  "device": "NVIDIA GeForce RTX 4090 Laptop GPU",
+  "device_memory_gb": 15.57000732421875,
+  "gpu_available": true,
+  "models": [
+    "yolov8l",
+    "yolo12l",
+    "rtdetr-l"
+  ],
+  "results": [
+    {
+      "model": "yolov8l",
+      "type": "base",
+      "val_precision": 0.807713474233915,
+      "val_recall": 0.7267426622623199,
+      "val_f1": 0.7650912191007865,
+      "val_map50": 0.7098463008297585,
+      "test_precision": 0.8349853180611251,
+      "test_recall": 0.7414548641542507,
+      "test_f1": 0.7854450043023836,
+      "test_map50": 0.7432055860406038,
+      "train_time": 430.07121443748474,
+      "val_inference_time": 2.6961779594421387,
+      "test_inference_time": 2.1783454418182373
+    },
+    {
+      "model": "yolo12l",
+      "type": "base",
+      "val_precision": 0.8088337268280688,
+      "val_recall": 0.7238817910671489,
+      "val_f1": 0.7640029973133577,
+      "val_map50": 0.6925699157703906,
+      "test_precision": 0.847898772299332,
+      "test_recall": 0.7283085013146363,
+      "test_f1": 0.7835663528195478,
+      "test_map50": 0.7266191113339622,
+      "train_time": 370.7492651939392,
+      "val_inference_time": 2.752669334411621,
+      "test_inference_time": 2.1139960289001465
+    },
+    {
+      "model": "rtdetr-l",
+      "type": "base",
+      "val_precision": 0.8002796505504897,
+      "val_recall": 0.7677816224529027,
+      "val_f1": 0.7836933763336167,
+      "val_map50": 0.720752608654762,
+      "test_precision": 0.8238226132130504,
+      "test_recall": 0.7950596070394956,
+      "test_f1": 0.8091850912250977,
+      "test_map50": 0.7634138825828243,
+      "train_time": 511.69123673439026,
+      "val_inference_time": 3.201748847961426,
+      "test_inference_time": 2.461660623550415
+    }
+  ],
+  "best_model": "rtdetr-l",
+  "best_test_map50": 0.7634138825828243,
+  "model_metrics": {
+    "yolov8l": {
+      "total_parameters": 43691520,
+      "model_size_mb": 83.55059242248535
+    },
+    "yolo12l": {
+      "total_parameters": 26454880,
+      "model_size_mb": 51.006104469299316
+    },
+    "rtdetr-l": {
+      "total_parameters": 32970476,
+      "model_size_mb": 63.08739948272705
+    }
+  }
+}
