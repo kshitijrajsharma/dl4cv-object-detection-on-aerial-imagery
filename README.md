@@ -10,7 +10,7 @@ Coconut tree detection from drone imagery using YOLOv8, YOLOv12, and RT-DETR mod
 - Train multiple models (YOLOv8, YOLOv12, RT-DETR) on coconut trees from Kolovai, Tonga
 - Hyperparameter optimization using Optuna
 
-**Source**: World Bank - Automated Feature Detection of Aerial Imagery from the South Pacific
+**Source**: World Bank - Automated Feature Detection of Aerial Imagery from the South Pacific, read more [here](data/World%20Bank_%20Automated%20Feature%20Detection%20of%20Aerial%20Imagery%20from%20South%20Pacific%20-%20LIVE.pdf)
 
 ## Data
 
